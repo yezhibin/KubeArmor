@@ -27,7 +27,7 @@ func (p *PolicyServer) ContainerPolicy(c context.Context, data *pb.Policy) (*pb.
 	res := new(pb.Response)
 	if !p.ContainerPolicyEnabled {
 		res.Status = pb.PolicyStatus_NotEnabled
-		kg.Warn("Container policies are not enabled")
+		kg.Logger.Warn("Container policies are not enabled")
 		return res, nil
 	}
 	policyEvent := tp.K8sKubeArmorPolicyEvent{}
@@ -41,12 +41,12 @@ func (p *PolicyServer) ContainerPolicy(c context.Context, data *pb.Policy) (*pb.
 
 		} else {
 			res.Status = pb.PolicyStatus_Invalid
-			kg.Warn("Empty Container Policy Event")
+			kg.Logger.Warn("Empty Container Policy Event")
 		}
 
 	} else {
 
-		kg.Warn("Invalid Container Policy Event")
+		kg.Logger.Warn("Invalid Container Policy Event")
 
 		res.Status = pb.PolicyStatus_Invalid
 	}
@@ -59,7 +59,7 @@ func (p *PolicyServer) HostPolicy(c context.Context, data *pb.Policy) (*pb.Respo
 	res := new(pb.Response)
 	if !p.HostPolicyEnabled {
 		res.Status = pb.PolicyStatus_NotEnabled
-		kg.Warn("Host policies are not enabled")
+		kg.Logger.Warn("Host policies are not enabled")
 		return res, nil
 	}
 	policyEvent := tp.K8sKubeArmorHostPolicyEvent{}
@@ -73,14 +73,14 @@ func (p *PolicyServer) HostPolicy(c context.Context, data *pb.Policy) (*pb.Respo
 
 		} else {
 
-			kg.Warn("Empty Host Policy Event")
+			kg.Logger.Warn("Empty Host Policy Event")
 
 			res.Status = pb.PolicyStatus_Invalid
 
 		}
 
 	} else {
-		kg.Warn("Invalid Host Policy Event")
+		kg.Logger.Warn("Invalid Host Policy Event")
 		res.Status = pb.PolicyStatus_Invalid
 	}
 

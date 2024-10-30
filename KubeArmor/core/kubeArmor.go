@@ -181,13 +181,13 @@ func (dm *KubeArmorDaemon) DestroyKubeArmorDaemon() {
 	if dm.Logger != nil {
 		dm.Logger.Print("Terminated KubeArmor")
 	} else {
-		kg.Print("Terminated KubeArmor")
+		kg.Logger.Info("Terminated KubeArmor")
 	}
 
 	if dm.StateAgent != nil {
 		//go dm.StateAgent.PushNodeEvent(dm.Node, state.EventDeleted)
 		if dm.CloseStateAgent() {
-			kg.Print("Destroyed StateAgent")
+			kg.Logger.Info("Destroyed StateAgent")
 		}
 	}
 
@@ -197,21 +197,21 @@ func (dm *KubeArmorDaemon) DestroyKubeArmorDaemon() {
 	if dm.Logger != nil {
 		// close logger
 		if dm.CloseLogger() {
-			kg.Print("Stopped KubeArmor Logger")
+			kg.Logger.Info("Stopped KubeArmor Logger")
 		}
 	}
 
 	// wait for other routines
-	kg.Print("Waiting for routine terminations")
+	kg.Logger.Info("Waiting for routine terminations")
 	dm.WgDaemon.Wait()
 
 	// delete pid file
 	if _, err := os.Stat(cfg.PIDFilePath); err == nil {
-		kg.Print("Deleting PID file")
+		kg.Logger.Info("Deleting PID file")
 
 		err := os.Remove(cfg.PIDFilePath)
 		if err != nil {
-			kg.Errf("Failed to delete PID file")
+			kg.Logger.Errorf("Failed to delete PID file")
 		}
 	}
 }
@@ -237,7 +237,7 @@ func (dm *KubeArmorDaemon) ServeLogFeeds() {
 // CloseLogger Function
 func (dm *KubeArmorDaemon) CloseLogger() bool {
 	if err := dm.Logger.DestroyFeeder(); err != nil {
-		kg.Errf("Failed to destroy KubeArmor Logger (%s)", err.Error())
+		kg.Logger.Errorf("Failed to destroy KubeArmor Logger (%s)", err.Error())
 		return false
 	}
 	return true
@@ -255,7 +255,7 @@ func (dm *KubeArmorDaemon) InitSystemMonitor() bool {
 	}
 
 	if err := dm.SystemMonitor.InitBPF(); err != nil {
-		kg.Errf("Failed to initialize BPF (%s)", err.Error())
+		kg.Logger.Errorf("Failed to initialize BPF (%s)", err.Error())
 		return false
 	}
 
@@ -417,7 +417,7 @@ func KubeArmor() {
 
 	} else if cfg.GlobalCfg.K8sEnv {
 		if !K8s.InitK8sClient() {
-			kg.Err("Failed to initialize Kubernetes client")
+			kg.Logger.Error("Failed to initialize Kubernetes client")
 
 			// destroy the daemon
 			dm.DestroyKubeArmorDaemon()
@@ -425,14 +425,14 @@ func KubeArmor() {
 			return
 		}
 
-		kg.Print("Initialized Kubernetes client")
+		kg.Logger.Info("Initialized Kubernetes client")
 
 		// set the flag
 		dm.K8sEnabled = true
 
 		// watch k8s nodes
 		go dm.WatchK8sNodes()
-		kg.Print("Started to monitor node events")
+		kg.Logger.Info("Started to monitor node events")
 
 		// == //
 
@@ -451,7 +451,7 @@ func KubeArmor() {
 			}
 
 			if nodeIP == "" && timeout == 60 {
-				kg.Print("The node information is not available, terminating KubeArmor")
+				kg.Logger.Info("The node information is not available, terminating KubeArmor")
 
 				// destroy the daemon
 				dm.DestroyKubeArmorDaemon()
@@ -459,31 +459,31 @@ func KubeArmor() {
 				return
 			}
 
-			kg.Print("The node information is not available")
+			kg.Logger.Info("The node information is not available")
 
 			// wait for a while
 			time.Sleep(time.Second * 1)
 		}
 	}
 	dm.NodeLock.RLock()
-	kg.Printf("Node Name: %s", dm.Node.NodeName)
-	kg.Printf("Node IP: %s", dm.Node.NodeIP)
+	kg.Logger.Infof("Node Name: %s", dm.Node.NodeName)
+	kg.Logger.Infof("Node IP: %s", dm.Node.NodeIP)
 	if dm.K8sEnabled {
-		kg.Printf("Node Annotations: %v", dm.Node.Annotations)
+		kg.Logger.Infof("Node Annotations: %v", dm.Node.Annotations)
 	}
 
-	kg.Printf("OS Image: %s", dm.Node.OSImage)
-	kg.Printf("Kernel Version: %s", dm.Node.KernelVersion)
+	kg.Logger.Infof("OS Image: %s", dm.Node.OSImage)
+	kg.Logger.Infof("Kernel Version: %s", dm.Node.KernelVersion)
 	if dm.K8sEnabled {
-		kg.Printf("Kubelet Version: %s", dm.Node.KubeletVersion)
-		kg.Printf("Container Runtime: %s", dm.Node.ContainerRuntimeVersion)
+		kg.Logger.Infof("Kubelet Version: %s", dm.Node.KubeletVersion)
+		kg.Logger.Infof("Container Runtime: %s", dm.Node.ContainerRuntimeVersion)
 	}
 	dm.NodeLock.RUnlock()
 	// == //
 
 	// initialize log feeder
 	if !dm.InitLogger() {
-		kg.Err("Failed to intialize KubeArmor Logger")
+		kg.Logger.Error("Failed to intialize KubeArmor Logger")
 
 		// destroy the daemon
 		dm.DestroyKubeArmorDaemon()

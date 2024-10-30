@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -244,7 +245,7 @@ func NewFeeder(node *tp.Node, nodeLock **sync.RWMutex) *Feeder {
 		// #nosec
 		logFile, err := os.OpenFile(filepath.Clean(fd.Output), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			kg.Errf("Failed to open %s", fd.Output)
+			kg.Logger.Errorf("Failed to open %s", fd.Output)
 			return nil
 		}
 		fd.LogFile = logFile
@@ -277,7 +278,7 @@ func NewFeeder(node *tp.Node, nodeLock **sync.RWMutex) *Feeder {
 	// listen to gRPC port
 	listener, err := net.Listen("tcp", fd.Port)
 	if err != nil {
-		kg.Errf("Failed to listen a port (%s, %s)", fd.Port, err.Error())
+		kg.Logger.Errorf("Failed to listen a port (%s, %s)", fd.Port, err.Error())
 		return nil
 	}
 	fd.Listener = listener
@@ -285,14 +286,14 @@ func NewFeeder(node *tp.Node, nodeLock **sync.RWMutex) *Feeder {
 	if cfg.GlobalCfg.GRPC == "0" {
 		pidFile, err := os.Create(cfg.PIDFilePath)
 		if err != nil {
-			kg.Errf("Failed to create file %s", cfg.PIDFilePath)
+			kg.Logger.Errorf("Failed to create file %s", cfg.PIDFilePath)
 			return nil
 		}
 
 		defer func() {
 			err := pidFile.Close()
 			if err != nil {
-				kg.Errf("Failed to close file %s", cfg.PIDFilePath)
+				kg.Logger.Errorf("Failed to close file %s", cfg.PIDFilePath)
 			}
 		}()
 
@@ -301,7 +302,7 @@ func NewFeeder(node *tp.Node, nodeLock **sync.RWMutex) *Feeder {
 
 		_, err = pidFile.WriteString(port)
 		if err != nil {
-			kg.Errf("Failed to write file %s", cfg.PIDFilePath)
+			kg.Logger.Errorf("Failed to write file %s", cfg.PIDFilePath)
 			return nil
 		}
 	}
@@ -325,10 +326,10 @@ func NewFeeder(node *tp.Node, nodeLock **sync.RWMutex) *Feeder {
 	if cfg.GlobalCfg.TLSEnabled {
 		tlsCredentials, err := loadTLSCredentials(node.NodeIP)
 		if err != nil {
-			kg.Errf("cannot load TLS credentials: %s", err)
+			kg.Logger.Errorf("cannot load TLS credentials: %s", err)
 			return nil
 		}
-		kg.Print("Server started with tls enabled")
+		kg.Logger.Info("Server started with tls enabled")
 		// create a log server
 		fd.LogServer = grpc.NewServer(
 			grpc.Creds(tlsCredentials),
@@ -365,7 +366,7 @@ func (fd *BaseFeeder) DestroyFeeder() error {
 	// close listener
 	if fd.Listener != nil {
 		if err := fd.Listener.Close(); err != nil {
-			kg.Err(err.Error())
+			kg.Logger.Error(err.Error())
 		}
 		fd.Listener = nil
 	}
@@ -373,7 +374,7 @@ func (fd *BaseFeeder) DestroyFeeder() error {
 	// close LogFile
 	if fd.LogFile != nil {
 		if err := fd.LogFile.Close(); err != nil {
-			kg.Err(err.Error())
+			kg.Logger.Error(err.Error())
 		}
 		fd.LogFile = nil
 	}
@@ -393,12 +394,12 @@ func (fd *Feeder) StrToFile(str string) {
 		// write the string into the file
 		w := bufio.NewWriter(fd.LogFile)
 		if _, err := w.WriteString(str); err != nil {
-			kg.Err(err.Error())
+			kg.Logger.Error(err.Error())
 		}
 
 		// flush the file buffer
 		if err := w.Flush(); err != nil {
-			kg.Err(err.Error())
+			kg.Logger.Error(err.Error())
 		}
 	}
 }
@@ -407,56 +408,113 @@ func (fd *Feeder) StrToFile(str string) {
 // == Messages == //
 // ============== //
 
+func get2BaseName(filePath string) string {
+	ss := strings.Split(filePath, "/")
+	n := len(ss)
+	if n > 1 {
+		return ss[n-2] + "/" + ss[n-1]
+	}
+	return filePath
+}
+
 // Print Function
 func (fd *Feeder) Print(message string) {
 	fd.PushMessage("INFO", message)
-	kg.Print(message)
+
+	var callerInfo string
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerInfo = fmt.Sprintf("%s:%d", get2BaseName(file), line)
+	}
+	kg.Logger.Infof("%s, call info: %s", message, callerInfo)
 }
 
 // Printf Function
 func (fd *Feeder) Printf(message string, args ...interface{}) {
 	str := fmt.Sprintf(message, args...)
 	fd.PushMessage("INFO", str)
-	kg.Print(str)
+
+	var callerInfo string
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerInfo = fmt.Sprintf("%s:%d", get2BaseName(file), line)
+	}
+	kg.Logger.Infof("%s, call info: %s", str, callerInfo)
 }
 
 // Debug Function
 func (fd *Feeder) Debug(message string) {
 	fd.PushMessage("DEBUG", message)
-	kg.Debug(message)
+
+	var callerInfo string
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerInfo = fmt.Sprintf("%s:%d", get2BaseName(file), line)
+	}
+	kg.Logger.Debugf("%s, call info: %s", message, callerInfo)
 }
 
 // Debugf Function
 func (fd *Feeder) Debugf(message string, args ...interface{}) {
 	str := fmt.Sprintf(message, args...)
 	fd.PushMessage("DEBUG", str)
-	kg.Debug(str)
+
+	var callerInfo string
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerInfo = fmt.Sprintf("%s:%d", get2BaseName(file), line)
+	}
+	kg.Logger.Debugf("%s, call info: %s", str, callerInfo)
 }
 
 // Err Function
 func (fd *Feeder) Err(message string) {
 	fd.PushMessage("ERROR", message)
-	kg.Err(message)
+
+	var callerInfo string
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerInfo = fmt.Sprintf("%s:%d", get2BaseName(file), line)
+	}
+	kg.Logger.Errorf("%s, call info: %s", message, callerInfo)
 }
 
 // Errf Function
 func (fd *Feeder) Errf(message string, args ...interface{}) {
 	str := fmt.Sprintf(message, args...)
 	fd.PushMessage("ERROR", str)
-	kg.Err(str)
+
+	var callerInfo string
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerInfo = fmt.Sprintf("%s:%d", get2BaseName(file), line)
+	}
+	kg.Logger.Errorf("%s, call info: %s", str, callerInfo)
 }
 
 // Warn Function
 func (fd *Feeder) Warn(message string) {
 	fd.PushMessage("WARN", message)
-	kg.Warn(message)
+
+	var callerInfo string
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerInfo = fmt.Sprintf("%s:%d", get2BaseName(file), line)
+	}
+	kg.Logger.Warnf("%s, call info: %s", message, callerInfo)
 }
 
 // Warnf Function
 func (fd *Feeder) Warnf(message string, args ...interface{}) {
 	str := fmt.Sprintf(message, args...)
 	fd.PushMessage("WARN", str)
-	kg.Warnf(str)
+
+	var callerInfo string
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		callerInfo = fmt.Sprintf("%s:%d", get2BaseName(file), line)
+	}
+	kg.Logger.Warnf("%s, call info: %s", str, callerInfo)
 }
 
 // ===================== //
@@ -479,7 +537,7 @@ func (fd *BaseFeeder) ServeLogFeeds() {
 
 	// feed logs
 	if err := fd.LogServer.Serve(fd.Listener); err != nil {
-		kg.Print("Terminated the gRPC service")
+		kg.Logger.Info("Terminated the gRPC service")
 	}
 }
 
@@ -520,7 +578,7 @@ func (fd *Feeder) PushMessage(level, message string) {
 			counter++
 			if counter == lenMsg {
 				//Default on the last uid in Messagestruct means the msg isnt pushed into Broadcast
-				kg.Printf("msg channel busy, msg dropped")
+				kg.Logger.Infof("msg channel busy, msg dropped")
 			}
 
 		}
@@ -671,7 +729,7 @@ func (fd *Feeder) PushLog(log tp.Log) {
 				counter++
 				if counter == lenAlert {
 					//Default on the last uid in Alterstruct means the Alert isnt pushed into Broadcast
-					kg.Printf("log channel busy, alert dropped.")
+					kg.Logger.Infof("log channel busy, alert dropped.")
 				}
 
 			}
@@ -741,7 +799,7 @@ func (fd *Feeder) PushLog(log tp.Log) {
 				counter++
 				if counter == lenlog {
 					//Default on the last uid in Logstuct means the log isnt pushed into Broadcase
-					kg.Printf("log channel busy, log dropped.")
+					kg.Logger.Infof("log channel busy, log dropped.")
 				}
 			}
 		}

@@ -166,7 +166,7 @@ func readCmdLineParams() {
 		kv := fmt.Sprintf("%s:%v", f.Name, f.Value)
 		flags = append(flags, kv)
 	})
-	kg.Printf("Arguments [%s]", strings.Join(flags, " "))
+	kg.Logger.Infof("Arguments [%s]", strings.Join(flags, " "))
 
 	flag.Parse()
 
@@ -239,7 +239,7 @@ func LoadConfig() error {
 		cfgfile = "kubearmor.yaml"
 	}
 	if _, err := os.Stat(cfgfile); err == nil {
-		kg.Printf("setting config from file [%s]", cfgfile)
+		kg.Logger.Infof("setting config from file [%s]", cfgfile)
 		viper.SetConfigFile(cfgfile)
 		err := viper.ReadInConfig()
 		if err != nil {
@@ -286,7 +286,7 @@ func LoadConfig() error {
 	GlobalCfg.HostDefaultNetworkPosture = viper.GetString(ConfigHostDefaultNetworkPosture)
 	GlobalCfg.HostDefaultCapabilitiesPosture = viper.GetString(ConfigHostDefaultCapabilitiesPosture)
 
-	kg.Printf("Configuration [%+v]", GlobalCfg)
+	kg.Logger.Infof("Configuration [%+v]", GlobalCfg)
 
 	if GlobalCfg.KVMAgent {
 		GlobalCfg.Policy = false
@@ -322,7 +322,7 @@ func LoadConfig() error {
 	GlobalCfg.ThrottleSec = viper.GetInt(ConfigThrottleSec)
 	GlobalCfg.AnnotateResources = viper.GetBool(ConfigAnnotateResources)
 
-	kg.Printf("Final Configuration [%+v]", GlobalCfg)
+	kg.Logger.Infof("Final Configuration [%+v]", GlobalCfg)
 
 	return nil
 }

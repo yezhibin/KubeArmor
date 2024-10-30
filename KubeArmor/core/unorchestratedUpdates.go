@@ -686,7 +686,7 @@ func (dm *KubeArmorDaemon) backupKubeArmorHostPolicy(policy tp.HostSecurityPolic
 	// Check for "/opt/kubearmor/policies" path. If dir not found, create the same
 	if _, err := os.Stat(cfg.PolicyDir); err != nil {
 		if err = os.MkdirAll(cfg.PolicyDir, 0700); err != nil {
-			kg.Warnf("Dir creation failed for [%v]", cfg.PolicyDir)
+			kg.Logger.Warnf("Dir creation failed for [%v]", cfg.PolicyDir)
 			return
 		}
 	}
@@ -710,7 +710,7 @@ func (dm *KubeArmorDaemon) backupKubeArmorContainerPolicy(policy tp.SecurityPoli
 	// Check for "/opt/kubearmor/policies" path. If dir not found, create the same
 	if _, err := os.Stat(cfg.PolicyDir); err != nil {
 		if err = os.MkdirAll(cfg.PolicyDir, 0700); err != nil {
-			kg.Warnf("Dir creation failed for [%v]", cfg.PolicyDir)
+			kg.Logger.Warnf("Dir creation failed for [%v]", cfg.PolicyDir)
 			return
 		}
 	}
@@ -731,7 +731,7 @@ func (dm *KubeArmorDaemon) backupKubeArmorContainerPolicy(policy tp.SecurityPoli
 
 func (dm *KubeArmorDaemon) restoreKubeArmorPolicies() {
 	if _, err := os.Stat(cfg.PolicyDir); err != nil {
-		kg.Warn("Policies dir not found for restoration")
+		kg.Logger.Warn("Policies dir not found for restoration")
 		return
 	}
 
@@ -746,7 +746,7 @@ func (dm *KubeArmorDaemon) restoreKubeArmorPolicies() {
 
 				err := json.Unmarshal(data, &k)
 				if err != nil {
-					kg.Errf("Failed to unmarshal policy: %v", err)
+					kg.Logger.Errorf("Failed to unmarshal policy: %v", err)
 					continue
 				}
 
@@ -769,14 +769,14 @@ func (dm *KubeArmorDaemon) restoreKubeArmorPolicies() {
 							Object: hostPolicy,
 						})
 					} else {
-						kg.Errf("Failed to unmarshal host policy: %v", err)
+						kg.Logger.Errorf("Failed to unmarshal host policy: %v", err)
 					}
 				}
 			}
 		}
 
 		if len(policyFiles) == 0 {
-			kg.Warn("No policies found for restoration")
+			kg.Logger.Warn("No policies found for restoration")
 		}
 	}
 }
@@ -787,11 +787,11 @@ func (dm *KubeArmorDaemon) removeBackUpPolicy(name string) {
 	fname := cfg.PolicyDir + name + ".yaml"
 	// Check for "/opt/kubearmor/policies" path. If dir not found, create the same
 	if _, err := os.Stat(fname); err != nil {
-		kg.Printf("Backup policy [%v] not exist", fname)
+		kg.Logger.Infof("Backup policy [%v] not exist", fname)
 		return
 	}
 
 	if err := os.Remove(fname); err != nil {
-		kg.Errf("unable to delete file:%s err=%s", fname, err.Error())
+		kg.Logger.Errorf("unable to delete file:%s err=%s", fname, err.Error())
 	}
 }

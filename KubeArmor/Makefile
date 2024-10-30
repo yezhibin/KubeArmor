@@ -146,7 +146,7 @@ scan:
 
 .PHONY: clean
 clean:
-	cd $(CURDIR); sudo rm -rf kubearmor karmor dist /tmp/kubearmor.log
+	cd $(CURDIR); rm -rf kubearmor karmor dist /tmp/kubearmor.log
 	cd $(CURDIR); find . -name .coverprofile | xargs -I {} rm {}
 
 .PHONY: vagrant-check

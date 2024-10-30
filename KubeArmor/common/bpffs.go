@@ -57,7 +57,7 @@ var (
 func CheckOrMountBPFFs(bpfRoot string) {
 	mountOnce.Do(func() {
 		if err := checkOrMountBPFFs(bpfRoot); err != nil {
-			kg.Err("Unable to mount BPF filesystem")
+			kg.Logger.Error("Unable to mount BPF filesystem")
 		}
 	})
 }
@@ -96,7 +96,7 @@ func checkOrMountDefaultLocations() error {
 	// If /sys/fs/bpf is not mounted at all, we should mount
 	// BPFFS there.
 	if !mounted {
-		kg.Printf("Mounting BPF Filesystem at %s", mapRoot)
+		kg.Logger.Infof("Mounting BPF Filesystem at %s", mapRoot)
 		if err := mountFs(); err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ func checkOrMountDefaultLocations() error {
 		// mount BPFFS in /run/kubearmor/bpffs inside the container.
 		// This will allow operation of Kubearmor but will result in
 		// unmounting of the filesystem when the pod is restarted.
-		kg.Warnf("BPF filesystem is going to be mounted automatically "+
+		kg.Logger.Warnf("BPF filesystem is going to be mounted automatically "+
 			"in %s. However, it probably means that Kubearmor is running "+
 			"inside container and BPFFS is not mounted on the host. ",
 			mapRoot)
@@ -125,16 +125,16 @@ func checkOrMountDefaultLocations() error {
 			return err
 		}
 		if !cMounted {
-			kg.Printf("Mounting BPF Filesystem at %s", mapRoot)
+			kg.Logger.Infof("Mounting BPF Filesystem at %s", mapRoot)
 			if err := mountFs(); err != nil {
 				return err
 			}
 		} else if !cBpffsInstance {
-			kg.Printf("%s is mounted but has a different filesystem than BPFFS", fallbackBPFFsPath)
+			kg.Logger.Infof("%s is mounted but has a different filesystem than BPFFS", fallbackBPFFsPath)
 		}
 	}
 
-	kg.Printf("Detected mounted BPF filesystem at %s", mapRoot)
+	kg.Logger.Infof("Detected mounted BPF filesystem at %s", mapRoot)
 
 	return nil
 }
@@ -151,7 +151,7 @@ func checkOrMountCustomLocation(bpfRoot string) error {
 	// If the custom location has no mount, let's mount BPFFS there.
 	if !mounted {
 		setMapRoot(bpfRoot)
-		kg.Printf("Mounting BPF Filesystem at %s", mapRoot)
+		kg.Logger.Infof("Mounting BPF Filesystem at %s", mapRoot)
 		if err := mountFs(); err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func checkOrMountCustomLocation(bpfRoot string) error {
 		return fmt.Errorf("mount in the custom directory %s has a different filesystem than BPFFS", bpfRoot)
 	}
 
-	kg.Printf("Detected mounted BPF filesystem at %s", mapRoot)
+	kg.Logger.Infof("Detected mounted BPF filesystem at %s", mapRoot)
 
 	return nil
 }

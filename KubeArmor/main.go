@@ -26,7 +26,7 @@ func printBuildDetails() {
 	if GitCommit == "" {
 		return
 	}
-	kg.Printf("BUILD-INFO: commit: %v, branch: %v, date: %v",
+	kg.Logger.Infof("BUILD-INFO: commit: %v, branch: %v, date: %v",
 		GitCommit, GitBranch, BuildDate)
 }
 
@@ -37,7 +37,7 @@ func init() {
 func main() {
 	if os.Geteuid() != 0 {
 		if os.Getenv("KUBEARMOR_UBI") == "" {
-			kg.Printf("Need to have root privileges to run %s\n", os.Args[0])
+			kg.Logger.Infof("Need to have root privileges to run %s\n", os.Args[0])
 			return
 		}
 	}
@@ -53,26 +53,26 @@ func main() {
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			err = os.Remove(path)
 			if err != nil {
-				kg.Err(err.Error())
+				kg.Logger.Error(err.Error())
 			}
-			kg.Warnf("Deleteing existing map %s. This means previous cleanup was failed", path)
+			kg.Logger.Warnf("Deleteing existing map %s. This means previous cleanup was failed", path)
 
 		}
 	}
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		kg.Err(err.Error())
+		kg.Logger.Error(err.Error())
 		return
 	}
 
 	if err := os.Chdir(dir); err != nil {
-		kg.Err(err.Error())
+		kg.Logger.Error(err.Error())
 		return
 	}
 
 	if err := cfg.LoadConfig(); err != nil {
-		kg.Err(err.Error())
+		kg.Logger.Error(err.Error())
 		return
 	}
 

@@ -57,9 +57,9 @@ func (dm *KubeArmorDaemon) HandleNodeAnnotations(node *tp.Node) {
 	} else { // Read the lsm from the system
 		lsmByteData, err := os.ReadFile("/sys/kernel/security/lsm")
 		if err != nil && !os.IsNotExist(err) {
-			kg.Errf("Failed to read /sys/kernel/security/lsm (%s)", err.Error())
+			kg.Logger.Errorf("Failed to read /sys/kernel/security/lsm (%s)", err.Error())
 		} else if len(lsmByteData) == 0 {
-			kg.Err("Failed to read /sys/kernel/security/lsm: empty file")
+			kg.Logger.Error("Failed to read /sys/kernel/security/lsm: empty file")
 		}
 		lsm = string(lsmByteData)
 	}
@@ -159,7 +159,7 @@ func (dm *KubeArmorDaemon) checkAndUpdateNode(item *corev1.Node) {
 
 // WatchK8sNodes Function
 func (dm *KubeArmorDaemon) WatchK8sNodes() {
-	kg.Printf("GlobalCfg.Host=%s, KUBEARMOR_NODENAME=%s", cfg.GlobalCfg.Host, os.Getenv("KUBEARMOR_NODENAME"))
+	kg.Logger.Infof("GlobalCfg.Host=%s, KUBEARMOR_NODENAME=%s", cfg.GlobalCfg.Host, os.Getenv("KUBEARMOR_NODENAME"))
 
 	nodeName := os.Getenv("KUBEARMOR_NODENAME")
 	if nodeName == "" {
@@ -187,13 +187,13 @@ func (dm *KubeArmorDaemon) WatchK8sNodes() {
 			}
 		},
 	}); err != nil {
-		kg.Err("Couldn't Start Watching node information")
+		kg.Logger.Error("Couldn't Start Watching node information")
 		return
 	}
 
 	go factory.Start(wait.NeverStop)
 	factory.WaitForCacheSync(wait.NeverStop)
-	kg.Print("Started watching node information")
+	kg.Logger.Info("Started watching node information")
 
 }
 
@@ -591,7 +591,7 @@ func (dm *KubeArmorDaemon) WatchK8sPods() {
 		if resp := K8s.WatchK8sPods(nodeName); resp != nil {
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					kg.Warnf("Error closing http stream %s\n", err)
+					kg.Logger.Warnf("Error closing http stream %s\n", err)
 				}
 			}()
 
@@ -1000,7 +1000,7 @@ func matchClusterSecurityPolicyRule(policy tp.SecurityPolicy) bool {
 	if !hasInOperator {
 		nsList, err := K8s.K8sClient.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 		if err != nil {
-			kg.Err("unable to fetch namespace list")
+			kg.Logger.Error("unable to fetch namespace list")
 			return false
 		}
 
@@ -1235,7 +1235,7 @@ func (dm *KubeArmorDaemon) CreateSecurityPolicy(policyType string, securityPolic
 		if !hasInOperator {
 			nsList, err := K8s.K8sClient.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 			if err != nil {
-				kg.Err("unable to fetch namespace list")
+				kg.Logger.Error("unable to fetch namespace list")
 				return tp.SecurityPolicy{}, err
 			}
 
@@ -2337,7 +2337,7 @@ func (dm *KubeArmorDaemon) WatchHostSecurityPolicies(timeout time.Duration) {
 		if resp := K8s.WatchK8sHostSecurityPolicies(); resp != nil {
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					kg.Warnf("Error closing http stream %s\n", err)
+					kg.Logger.Warnf("Error closing http stream %s\n", err)
 				}
 			}()
 
@@ -2378,7 +2378,7 @@ func (dm *KubeArmorDaemon) updatEndpointsWithCM(cm *corev1.ConfigMap, action str
 	// get all namespaces
 	nsList, err := K8s.K8sClient.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		kg.Err("unable to fetch namespace list")
+		kg.Logger.Error("unable to fetch namespace list")
 		return
 	}
 
@@ -2457,7 +2457,7 @@ func validateDefaultPosture(key string, ns *corev1.Namespace, defaultPosture str
 		ns.Annotations[key] = defaultPosture
 		updatedNS, err := K8s.K8sClient.CoreV1().Namespaces().Update(context.Background(), ns, metav1.UpdateOptions{})
 		if err != nil {
-			kg.Warnf("Error updating invalid default posture annotation for %v", updatedNS)
+			kg.Logger.Warnf("Error updating invalid default posture annotation for %v", updatedNS)
 		}
 	}
 	return defaultPosture, false
@@ -2576,7 +2576,7 @@ func (dm *KubeArmorDaemon) updateVisibilityWithCM(cm *corev1.ConfigMap, action s
 	// get all namespaces
 	nsList, err := K8s.K8sClient.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		kg.Err("unable to fetch namespace list")
+		kg.Logger.Error("unable to fetch namespace list")
 		return
 	}
 

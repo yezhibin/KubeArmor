@@ -16,7 +16,7 @@ import (
 // PushContainerEvent function pushes (container + pod) event
 func (sa *StateAgent) PushContainerEvent(container tp.Container, event string) {
 	if container.ContainerID == "" {
-		kg.Debug("Error while pushing container event. Missing data.")
+		kg.Logger.Debug("Error while pushing container event. Missing data.")
 		return
 	}
 
@@ -64,7 +64,7 @@ func (sa *StateAgent) PushContainerEvent(container tp.Container, event string) {
 
 	containerBytes, err := json.Marshal(container)
 	if err != nil {
-		kg.Warnf("Error while trying to marshal container data: %s", err.Error())
+		kg.Logger.Warnf("Error while trying to marshal container data: %s", err.Error())
 		return
 	}
 
@@ -84,7 +84,7 @@ func (sa *StateAgent) PushContainerEvent(container tp.Container, event string) {
 		select {
 		case conn <- containerEvent:
 		default:
-			kg.Debugf("Failed to send container %s event to connection: %s", event, uid)
+			kg.Logger.Debugf("Failed to send container %s event to connection: %s", event, uid)
 			return
 		}
 	}
@@ -95,13 +95,13 @@ func (sa *StateAgent) PushContainerEvent(container tp.Container, event string) {
 // PushNodeEvent function pushes node event
 func (sa *StateAgent) PushNodeEvent(node tp.Node, event string) {
 	if node.NodeName == "" {
-		kg.Warn("Received empty node event")
+		kg.Logger.Warn("Received empty node event")
 		return
 	}
 
 	nodeData, err := json.Marshal(node)
 	if err != nil {
-		kg.Warnf("Error while trying to marshal node data: %s", err.Error())
+		kg.Logger.Warnf("Error while trying to marshal node data: %s", err.Error())
 		return
 	}
 
@@ -121,7 +121,7 @@ func (sa *StateAgent) PushNodeEvent(node tp.Node, event string) {
 		select {
 		case conn <- nodeEvent:
 		default:
-			kg.Debugf("Failed to send node %s event to connection: %s", event, uid)
+			kg.Logger.Debugf("Failed to send node %s event to connection: %s", event, uid)
 			return
 		}
 	}
@@ -133,7 +133,7 @@ func (sa *StateAgent) PushNodeEvent(node tp.Node, event string) {
 func (sa *StateAgent) PushNamespaceEvent(namespace tp.Namespace, event string) {
 	nsBytes, err := json.Marshal(namespace)
 	if err != nil {
-		kg.Warnf("Failed to marshal ns event: %s", err.Error())
+		kg.Logger.Warnf("Failed to marshal ns event: %s", err.Error())
 		return
 	}
 
@@ -153,7 +153,7 @@ func (sa *StateAgent) PushNamespaceEvent(namespace tp.Namespace, event string) {
 		select {
 		case conn <- nsEvent:
 		default:
-			kg.Debugf("Failed to send namespace %s event to connection: %s", event, uid)
+			kg.Logger.Debugf("Failed to send namespace %s event to connection: %s", event, uid)
 			return
 		}
 	}

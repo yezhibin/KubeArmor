@@ -59,7 +59,7 @@ func NewDockerHandler() (*DockerHandler, error) {
 	DockerClient.NegotiateAPIVersion(context.Background())
 	clientVersion := DockerClient.ClientVersion()
 
-	kg.Printf("Verifying Docker API client version: %s", clientVersion)
+	kg.Logger.Infof("Verifying Docker API client version: %s", clientVersion)
 
 	serverVersion, err := DockerClient.ServerVersion(context.Background())
 	if err != nil {
@@ -67,14 +67,14 @@ func NewDockerHandler() (*DockerHandler, error) {
 	}
 
 	if clientVersion != serverVersion.APIVersion {
-		kg.Warnf("Docker client (%s) and Docker server (%s) API versions don't match", clientVersion, serverVersion.APIVersion)
+		kg.Logger.Warnf("Docker client (%s) and Docker server (%s) API versions don't match", clientVersion, serverVersion.APIVersion)
 	}
 
 	docker.DockerClient = DockerClient
 
 	docker.NodeIP = kl.GetExternalIPAddr()
 
-	kg.Printf("Initialized Docker Handler (version: %s)", clientVersion)
+	kg.Logger.Infof("Initialized Docker Handler (version: %s)", clientVersion)
 
 	return docker, nil
 }
@@ -83,7 +83,7 @@ func NewDockerHandler() (*DockerHandler, error) {
 func (dh *DockerHandler) Close() {
 	if dh.DockerClient != nil {
 		if err := dh.DockerClient.Close(); err != nil {
-			kg.Err(err.Error())
+			kg.Logger.Error(err.Error())
 		}
 	}
 }
@@ -146,13 +146,13 @@ func (dh *DockerHandler) GetContainerInfo(containerID string, OwnerInfo map[stri
 
 	if data, err := os.Readlink("/proc/" + pid + "/ns/pid"); err == nil {
 		if _, err := fmt.Sscanf(data, "pid:[%d]\n", &container.PidNS); err != nil {
-			kg.Warnf("Unable to get PidNS (%s, %s, %s)", containerID, pid, err.Error())
+			kg.Logger.Warnf("Unable to get PidNS (%s, %s, %s)", containerID, pid, err.Error())
 		}
 	}
 
 	if data, err := os.Readlink("/proc/" + pid + "/ns/mnt"); err == nil {
 		if _, err := fmt.Sscanf(data, "mnt:[%d]\n", &container.MntNS); err != nil {
-			kg.Warnf("Unable to get MntNS (%s, %s, %s)", containerID, pid, err.Error())
+			kg.Logger.Warnf("Unable to get MntNS (%s, %s, %s)", containerID, pid, err.Error())
 		}
 	}
 

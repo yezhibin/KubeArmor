@@ -97,11 +97,11 @@ func (sa *StateAgent) removeStateEventChan(uid string) {
 // WatchState sends state events in a continuous stream
 func (sa *StateAgent) WatchState(msg *emptypb.Empty, srv pb.StateAgent_WatchStateServer) error {
 	uid, conn := sa.addStateEventChan()
-	kg.Printf("Added a new client (%s) for WatchState", uid)
+	kg.Logger.Infof("Added a new client (%s) for WatchState", uid)
 
 	defer func() {
 		sa.removeStateEventChan(uid)
-		kg.Printf("Deleted client (%s) for WatchState", uid)
+		kg.Logger.Infof("Deleted client (%s) for WatchState", uid)
 	}()
 
 	for sa.Running {
@@ -110,7 +110,7 @@ func (sa *StateAgent) WatchState(msg *emptypb.Empty, srv pb.StateAgent_WatchStat
 			return nil
 		case event := <-conn:
 			if err := kl.HandleGRPCErrors(srv.Send(event)); err != nil {
-				kg.Warnf("Failed to send state event to WatchState client %s: %s", uid, err.Error())
+				kg.Logger.Warnf("Failed to send state event to WatchState client %s: %s", uid, err.Error())
 				return err
 			}
 		}
@@ -125,7 +125,7 @@ func (sa *StateAgent) GetState(msg *emptypb.Empty, srv pb.StateAgent_GetStateSer
 
 	nodeData, err := json.Marshal(sa.Node)
 	if err != nil {
-		kg.Warnf("Error while trying to marshal node data: %s", err.Error())
+		kg.Logger.Warnf("Error while trying to marshal node data: %s", err.Error())
 	}
 
 	nodeEvent := &pb.StateEvent{
@@ -140,7 +140,7 @@ func (sa *StateAgent) GetState(msg *emptypb.Empty, srv pb.StateAgent_GetStateSer
 	for nsName, ns := range sa.KubeArmorNamespaces {
 		nsBytes, err := json.Marshal(ns)
 		if err != nil {
-			kg.Warnf("Failed to marshal ns %s event: %s", nsName, err.Error())
+			kg.Logger.Warnf("Failed to marshal ns %s event: %s", nsName, err.Error())
 		}
 
 		nsEvent := &pb.StateEvent{
@@ -157,7 +157,7 @@ func (sa *StateAgent) GetState(msg *emptypb.Empty, srv pb.StateAgent_GetStateSer
 	for _, container := range sa.Containers {
 		containerBytes, err := json.Marshal(container)
 		if err != nil {
-			kg.Warnf("Error while trying to marshal container %.6s data: %s", container.ContainerID, err.Error())
+			kg.Logger.Warnf("Error while trying to marshal container %.6s data: %s", container.ContainerID, err.Error())
 		}
 
 		containerEvent := &pb.StateEvent{
@@ -176,7 +176,7 @@ func (sa *StateAgent) GetState(msg *emptypb.Empty, srv pb.StateAgent_GetStateSer
 
 	err = srv.Send(stateEvents)
 	if err := kl.HandleGRPCErrors(err); err != nil {
-		kg.Warnf("Failed to send state events to GetState: ", err.Error())
+		kg.Logger.Warnf("Failed to send state events to GetState: ", err.Error())
 		return err
 	}
 

@@ -78,7 +78,7 @@ func MatchesRegex(key, element string, array []string) bool {
 		if strings.Contains(item, key) {
 			expr, err := regexp.CompilePOSIX(element)
 			if err != nil {
-				kg.Warnf("Failed to compile regex: %s", element)
+				kg.Logger.Warnf("Failed to compile regex: %s", element)
 				return false
 			}
 
@@ -205,11 +205,11 @@ func GetUptimeTimestamp() float64 {
 
 	uptimeDiffSec, err := strconv.ParseInt(strings.Split(uptimeDiff, ".")[0], 10, 64) // second
 	if err != nil {
-		kg.Err(err.Error())
+		kg.Logger.Error(err.Error())
 	}
 	uptimeDiffMil, err := strconv.ParseInt(strings.Split(uptimeDiff, ".")[1], 10, 64) // milli second
 	if err != nil {
-		kg.Err(err.Error())
+		kg.Logger.Error(err.Error())
 	}
 
 	uptime := now.Add(-time.Second * time.Duration(uptimeDiffSec))
@@ -230,12 +230,12 @@ func GetDateTimeFromTimestamp(timestamp float64) string {
 
 	sec64, err := strconv.ParseInt(secTS, 10, 64)
 	if err != nil {
-		kg.Err(err.Error())
+		kg.Logger.Error(err.Error())
 	}
 
 	nano64, err := strconv.ParseInt(nanoTS, 10, 64)
 	if err != nil {
-		kg.Err(err.Error())
+		kg.Logger.Error(err.Error())
 	}
 
 	tm := time.Unix(sec64, nano64)
@@ -260,7 +260,7 @@ func GetCommandOutputWithErr(cmd string, args []string) (string, error) {
 	go func() {
 		defer func() {
 			if err = stdin.Close(); err != nil {
-				kg.Warnf("Error closing stdin %s\n", err)
+				kg.Logger.Warnf("Error closing stdin %s\n", err)
 			}
 		}()
 		_, err = io.WriteString(stdin, "values written to stdin are passed to cmd's standard input")
@@ -294,7 +294,7 @@ func GetCommandOutputWithoutErr(cmd string, args []string) string {
 	go func() {
 		defer func() {
 			if err = stdin.Close(); err != nil {
-				kg.Warnf("Error closing stdin %s\n", err)
+				kg.Logger.Warnf("Error closing stdin %s\n", err)
 			}
 		}()
 		_, _ = io.WriteString(stdin, "values written to stdin are passed to cmd's standard input")

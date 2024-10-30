@@ -17,8 +17,8 @@ import (
 // == Logger == //
 // ============ //
 
-// zapLogger Handler
-var zapLogger *zap.SugaredLogger
+// ZapLogger Handler
+var Logger *zap.SugaredLogger
 
 // init Function
 func init() {
@@ -35,23 +35,7 @@ func initLogger() {
 	defaultConfig := []byte(`{
 		"level": "info",
 		"encoding": "console",
-		"outputPaths": ["stdout"],
-		"encoderConfig": {
-			"messageKey": "message",
-			"levelKey": "level",
-			"nameKey": "logger",
-			"timeKey": "time",
-			"callerKey": "logger",
-			"stacktraceKey": "stacktrace",
-			"callstackKey": "callstack",
-			"errorKey": "error",
-			"levelEncoder": "capitalColor",
-			"durationEncoder": "second",
-			"sampling": {
-				"initial": "3",
-				"thereafter": "10"
-			}
-		}
+		"outputPaths": ["stdout"]
 	}`)
 
 	config := zap.Config{}
@@ -59,61 +43,20 @@ func initLogger() {
 		panic(err)
 	}
 
-	config.EncoderConfig.EncodeTime = customTimeEncoder
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder   // 修改时间戳的格式
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder // 日志级别使用大写显示
+	config.EncoderConfig = encoderConfig
 
 	// this is not read from config/viper as logger is initialized before config
 	if val, ok := os.LookupEnv("DEBUG"); ok && val == "true" {
 		config.Level.SetLevel(zap.DebugLevel) // set to enable debug logging
 	}
 
-	logger, err := config.Build()
+	logger, err := config.Build(zap.AddCaller())
 	if err != nil {
 		panic(err)
 	}
 
-	zapLogger = logger.Sugar()
-}
-
-// ======================= //
-// == Logging Functions == //
-// ======================= //
-
-// Print Function
-func Print(message string) {
-	zapLogger.Info(message)
-}
-
-// Printf Function
-func Printf(message string, args ...interface{}) {
-	zapLogger.Infof(message, args...)
-}
-
-// Debug Function
-func Debug(message string) {
-	zapLogger.Debug(message)
-}
-
-// Debugf Function
-func Debugf(message string, args ...interface{}) {
-	zapLogger.Debugf(message, args...)
-}
-
-// Err Function
-func Err(message string) {
-	zapLogger.Error(message)
-}
-
-// Errf Function
-func Errf(message string, args ...interface{}) {
-	zapLogger.Errorf(message, args...)
-}
-
-// Warn Function
-func Warn(message string) {
-	zapLogger.Warn(message)
-}
-
-// Warnf Function
-func Warnf(message string, args ...interface{}) {
-	zapLogger.Warnf(message, args...)
+	Logger = logger.Sugar()
 }

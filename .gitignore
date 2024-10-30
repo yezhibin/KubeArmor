@@ -37,3 +37,12 @@ vmlinux.h
 #ignore go.work
 go.work
 go.work.sum
+
+#release
+release/KubeArmor
+release/opt
+release/*.tar
+
+#BPF
+BPF
+

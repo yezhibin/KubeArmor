@@ -115,7 +115,7 @@ func NewContainerdHandler() *ContainerdHandler {
 	// active containers
 	ch.containers = map[string]context.Context{}
 
-	kg.Print("Initialized Containerd Handler")
+	kg.Logger.Info("Initialized Containerd Handler")
 
 	return ch
 }
@@ -124,7 +124,7 @@ func NewContainerdHandler() *ContainerdHandler {
 func (ch *ContainerdHandler) Close() {
 	if ch.conn != nil {
 		if err := ch.conn.Close(); err != nil {
-			kg.Err(err.Error())
+			kg.Logger.Error(err.Error())
 		}
 	}
 }
@@ -195,13 +195,13 @@ func (ch *ContainerdHandler) GetContainerInfo(ctx context.Context, containerID s
 
 		if data, err := os.Readlink("/proc/" + pid + "/ns/pid"); err == nil {
 			if _, err := fmt.Sscanf(data, "pid:[%d]\n", &container.PidNS); err != nil {
-				kg.Warnf("Unable to get PidNS (%s, %s, %s)", containerID, pid, err.Error())
+				kg.Logger.Warnf("Unable to get PidNS (%s, %s, %s)", containerID, pid, err.Error())
 			}
 		}
 
 		if data, err := os.Readlink("/proc/" + pid + "/ns/mnt"); err == nil {
 			if _, err := fmt.Sscanf(data, "mnt:[%d]\n", &container.MntNS); err != nil {
-				kg.Warnf("Unable to get MntNS (%s, %s, %s)", containerID, pid, err.Error())
+				kg.Logger.Warnf("Unable to get MntNS (%s, %s, %s)", containerID, pid, err.Error())
 			}
 		}
 	} else {

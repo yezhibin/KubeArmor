@@ -33,12 +33,12 @@ func (ls *LogService) WatchMessages(req *pb.RequestMessage, svr pb.LogService_Wa
 	}
 
 	uid, conn := ls.EventStructs.AddMsgStruct(req.Filter, ls.QueueSize)
-	kg.Printf("Added a new client (%s) for WatchMessages", uid)
+	kg.Logger.Infof("Added a new client (%s) for WatchMessages", uid)
 
 	defer func() {
 		close(conn)
 		ls.EventStructs.RemoveMsgStruct(uid)
-		kg.Printf("Deleted the client (%s) for WatchMessages", uid)
+		kg.Logger.Infof("Deleted the client (%s) for WatchMessages", uid)
 	}()
 
 	for *ls.Running {
@@ -47,7 +47,7 @@ func (ls *LogService) WatchMessages(req *pb.RequestMessage, svr pb.LogService_Wa
 			return nil
 		case resp := <-conn:
 			if err := kl.HandleGRPCErrors(svr.Send(resp)); err != nil {
-				kg.Warnf("Failed to send a message=[%+v] err=[%s]", resp, err.Error())
+				kg.Logger.Warnf("Failed to send a message=[%+v] err=[%s]", resp, err.Error())
 				return err
 			}
 		}
@@ -67,12 +67,12 @@ func (ls *LogService) WatchAlerts(req *pb.RequestMessage, svr pb.LogService_Watc
 	}
 
 	uid, conn := ls.EventStructs.AddAlertStruct(req.Filter, ls.QueueSize)
-	kg.Printf("Added a new client (%s, %s) for WatchAlerts", uid, req.Filter)
+	kg.Logger.Infof("Added a new client (%s, %s) for WatchAlerts", uid, req.Filter)
 
 	defer func() {
 		close(conn)
 		ls.EventStructs.RemoveAlertStruct(uid)
-		kg.Printf("Deleted the client (%s) for WatchAlerts", uid)
+		kg.Logger.Infof("Deleted the client (%s) for WatchAlerts", uid)
 	}()
 
 	for *ls.Running {
@@ -81,7 +81,7 @@ func (ls *LogService) WatchAlerts(req *pb.RequestMessage, svr pb.LogService_Watc
 			return nil
 		case resp := <-conn:
 			if err := kl.HandleGRPCErrors(svr.Send(resp)); err != nil {
-				kg.Warnf("Failed to send an alert=[%+v] err=[%s]", resp, err.Error())
+				kg.Logger.Warnf("Failed to send an alert=[%+v] err=[%s]", resp, err.Error())
 				return err
 			}
 		}
@@ -101,12 +101,12 @@ func (ls *LogService) WatchLogs(req *pb.RequestMessage, svr pb.LogService_WatchL
 	}
 
 	uid, conn := ls.EventStructs.AddLogStruct(req.Filter, ls.QueueSize)
-	kg.Printf("Added a new client (%s, %s) for WatchLogs", uid, req.Filter)
+	kg.Logger.Infof("Added a new client (%s, %s) for WatchLogs", uid, req.Filter)
 
 	defer func() {
 		close(conn)
 		ls.EventStructs.RemoveLogStruct(uid)
-		kg.Printf("Deleted the client (%s) for WatchLogs", uid)
+		kg.Logger.Infof("Deleted the client (%s) for WatchLogs", uid)
 	}()
 
 	for *ls.Running {
@@ -115,7 +115,7 @@ func (ls *LogService) WatchLogs(req *pb.RequestMessage, svr pb.LogService_WatchL
 			return nil
 		case resp := <-conn:
 			if err := kl.HandleGRPCErrors(svr.Send(resp)); err != nil {
-				kg.Warnf("Failed to send a log=[%+v] err=[%s]", resp, err.Error())
+				kg.Logger.Warnf("Failed to send a log=[%+v] err=[%s]", resp, err.Error())
 				return err
 			}
 		}

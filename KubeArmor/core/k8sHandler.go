@@ -84,13 +84,13 @@ func NewK8sHandler() *K8sHandler {
 	}
 	config, err := ctrl.GetConfig()
 	if err != nil {
-		kg.Warnf("Error creating kubernetes config, %s", err)
+		kg.Logger.Warnf("Error creating kubernetes config, %s", err)
 		return kh
 	}
 
 	kh.KSPClient, err = kspclient.NewForConfig(config)
 	if err != nil {
-		kg.Warnf("Error creating ksp clientset, %s", err)
+		kg.Logger.Warnf("Error creating ksp clientset, %s", err)
 		return kh
 	}
 
@@ -213,7 +213,7 @@ func (kh *K8sHandler) DoRequest(cmd string, data interface{}, path string) ([]by
 	}
 
 	if err := resp.Body.Close(); err != nil {
-		kg.Err(err.Error())
+		kg.Logger.Error(err.Error())
 	}
 
 	return resBody, nil
