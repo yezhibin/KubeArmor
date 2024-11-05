@@ -82,7 +82,7 @@ func NewSELinuxEnforcer(node tp.Node, logger *fd.Feeder) *SELinuxEnforcer {
 
 	// remove old profiles if exists
 	if err = os.RemoveAll(filepath.Clean(cfg.GlobalCfg.SELinuxProfileDir)); err != nil {
-		se.Logger.Errf("Failed to remove existing SELinux profiles (%s)", err.Error())
+		se.Logger.Errf("Failed to remove existing SELinux profiles, dir: %s,  err: %s", cfg.GlobalCfg.SELinuxProfileDir, err.Error())
 		return nil
 	}
 
@@ -311,7 +311,7 @@ func (se *SELinuxEnforcer) InstallSELinuxModulesIfNeeded() bool {
 	if err := kl.RunCommandAndWaitWithErr(se.SELinuxTemplatePath+"/install.sh", []string{}); err == nil {
 		se.Logger.Printf("Installed the SELinux module")
 	} else {
-		se.Logger.Warnf("Unable to install a SELinux module")
+		se.Logger.Warnf("Unable to install a SELinux module, err: %v, tmpl dir: %s", err, se.SELinuxTemplatePath)
 		return false
 	}
 

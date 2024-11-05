@@ -1,0 +1,17 @@
+FROM docker.das-security.cn/ngsp/centos:7 AS kubearmor
+
+#ENV DEBUG=true
+
+RUN yum -y install policycoreutils-devel setools-console
+RUN mkdir -p /tmp/kubearmor.selinux
+
+COPY res/centos7/rpm/amd64/* /tmp/
+COPY entrypoint.sh /
+RUN cd /tmp && rpm -ivh *.rpm
+ 
+COPY KubeArmor/kubearmor /KubeArmor/kubearmor
+COPY opt/kubearmor/BPF/*.o /opt/kubearmor/BPF/
+COPY KubeArmor/templates/default/* /KubeArmor/templates/default/
+COPY KubeArmor/templates/* /KubeArmor/templates/
+
+ENTRYPOINT ["/entrypoint.sh"]

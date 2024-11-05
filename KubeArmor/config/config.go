@@ -268,6 +268,11 @@ func LoadConfig() error {
 		return fmt.Errorf("CRI socket must start with 'unix://' (%s is invalid)", GlobalCfg.CRISocket)
 	}
 
+	// 2024.11.04 patch by y00471614
+	if GlobalCfg.SELinuxProfileDir == "" {
+		GlobalCfg.SELinuxProfileDir = viper.GetString(ConfigSELinuxProfileDir)
+	}
+
 	GlobalCfg.Visibility = viper.GetString(ConfigVisibility)
 	GlobalCfg.HostVisibility = viper.GetString(ConfigHostVisibility)
 

@@ -81,7 +81,7 @@ lsmdispatch:
 	}
 
 selinux:
-	if !kl.IsInK8sCluster() {
+	if kl.IsInK8sCluster() {
 		re.seLinuxEnforcer = NewSELinuxEnforcer(node, logger)
 		if re.seLinuxEnforcer != nil {
 			re.Logger.Print("Initialized SELinux Enforcer")

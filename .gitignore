@@ -17,7 +17,7 @@ contribution/vagrant/*.log
 
 # packages
 *.deb
-*.rpm
+#*.rpm
 .coverprofile
 
 # object files
